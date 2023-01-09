@@ -6,10 +6,21 @@ public class Task<T> extends FutureTask<T> implements Callable<T>, Comparable<Ta
     private TaskType type;
     private Callable<T> callable;
 
+    /**
+     * Creates a Task with a default priority
+     * 
+     * @param callable The Task to be performed
+     */
     private Task(Callable<T> callable) {
         this(TaskType.IO, callable);
     }
 
+    /**
+     * Creates a Task
+     * 
+     * @param type     The task's priority
+     * @param callable The Task to be performed
+     */
     private Task(TaskType type, Callable<T> callable) {
         super(callable);
         this.type = type;
@@ -42,21 +53,45 @@ public class Task<T> extends FutureTask<T> implements Callable<T>, Comparable<Ta
         return false;
     }
 
+    /**
+     * This method is used to execute the task
+     * 
+     * @return A Future object that will get
+     *         the return value
+     */
     @Override
     public T call() throws Exception {
         return callable.call();
     }
 
-    // factory method 1
+    /**
+     * First factory method
+     * Creates a Task with a default priority
+     * 
+     * @param <T>      The return type of the Task
+     * @param callable The task to be performed
+     * @return The created Task object
+     */
     public static <T> Task<T> createTask(Callable<T> callable) {
         return new Task<T>(callable);
     }
 
-    // factory method 2
+    /**
+     * Second factory method
+     * 
+     * @param <T>      The return type of the Task
+     * @param callable The task to be performed
+     * @param type     The Task's priority
+     * @return The created Task object
+     */
     public static <T> Task<T> createTask(Callable<T> callable, TaskType type) {
         return new Task<T>(type, callable);
     }
 
+    /**
+     * Allows the Task class to be comparable to other Tasks, so the
+     * PriorityBlockingQueue is able to sort them by priority
+     */
     @Override
     public int compareTo(Task<T> o) {
         int difference = o.type.getPriorityValue() - this.type.getPriorityValue();

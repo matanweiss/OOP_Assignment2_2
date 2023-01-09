@@ -10,11 +10,22 @@ public class CustomExecutor extends ThreadPoolExecutor {
     private static int numOfCores = Runtime.getRuntime().availableProcessors();
     private int[] counts = { 0, 0, 0 };
 
+    /**
+     * Creates a new CustomExecutor by calling ThreadPoolExecutor's constructor
+     */
     public CustomExecutor() {
         super(numOfCores / 2, numOfCores - 1, 300, TimeUnit.MILLISECONDS,
                 new PriorityBlockingQueue<>());
     }
 
+    /**
+     * Submits a task to the PriorityBlockingQueue
+     * Also checking for the Task's type and updating counts for getCurrentMax()
+     * 
+     * @param <T>  the Task's return type
+     * @param task the Task
+     * @return a RunnableFuture<T> that has been executed
+     */
     public <T> Future<T> submit(Task<T> task) {
         int priority = 0;
         String s = task.getType().toString();
@@ -33,6 +44,12 @@ public class CustomExecutor extends ThreadPoolExecutor {
         return ftask;
     }
 
+    /**
+     * Creating a Task from a Callable
+     * checking it's priority by getCurrentMax()
+     * 
+     * @return the Task that the method created
+     */
     @Override
     protected <T> RunnableFuture<T> newTaskFor(final Callable<T> callable) {
         int priority = getCurrentMax();
@@ -42,17 +59,34 @@ public class CustomExecutor extends ThreadPoolExecutor {
         return Task.createTask(callable, type);
     }
 
+    /**
+     * Creating a Task with a default priority from Callable and calling submit()
+     * with the said task
+     */
+    /** */
     @Override
     public <T> Future<T> submit(Callable<T> callable) {
         Task<T> task = Task.createTask(callable);
         return submit(task);
     }
 
+    /**
+     * Creating a Task with from Callable and a TaskType, then calling submit()
+     * 
+     * @param <T>
+     * @param callable
+     * @param type
+     * @return a RunnableFuture<T> that has been executed
+     */
     public <T> Future<T> submit(Callable<T> callable, TaskType type) {
         Task<T> task = Task.createTask(callable, type);
         return submit(task);
     }
 
+    /**
+     * This method is called before a Task is executed
+     * This method lowers the count of the said Task type
+     */
     @Override
     protected void beforeExecute(Thread t, Runnable r) {
         int priority = getCurrentMax();
@@ -60,6 +94,15 @@ public class CustomExecutor extends ThreadPoolExecutor {
             counts[priority - 1]--;
     }
 
+    /**
+     * This method return an Integer representing the highest priority of a Task in
+     * PriorityBlockingQueue
+     * This method performs a constant number of operations so its time complexity
+     * is O(1)
+     * 
+     * @return An Integer
+     * 
+     */
     public int getCurrentMax() {
         if (0 < counts[0])
             return 1;
@@ -70,6 +113,10 @@ public class CustomExecutor extends ThreadPoolExecutor {
         return 0;
     }
 
+    /**
+     * 
+     * @return counts array
+     */
     public int[] getCounts() {
         return counts;
     }
@@ -78,6 +125,11 @@ public class CustomExecutor extends ThreadPoolExecutor {
         return counts.hashCode() * getQueue().hashCode();
     }
 
+    /**
+     * This method terminates the CustomExecutor by not allowing new Tasks to be
+     * submitted, executing the Tasks left in the PriorityBlockingQueue and the
+     * Tasks that being executed currently
+     */
     public void gracefullyTerminate() {
         try {
             super.awaitTermination(3, TimeUnit.SECONDS);
