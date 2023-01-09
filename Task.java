@@ -7,7 +7,7 @@ public class Task<T> extends FutureTask<T> implements Callable<T>, Comparable<Ta
     private Callable<T> callable;
 
     /**
-     * Creates a Task with a default priority
+     * This method calls the full constructor with a default priority
      * 
      * @param callable The Task to be performed
      */
@@ -16,7 +16,8 @@ public class Task<T> extends FutureTask<T> implements Callable<T>, Comparable<Ta
     }
 
     /**
-     * Creates a Task
+     * This method calls FutureTask's constructor and sets callable and type data
+     * members
      * 
      * @param type     The task's priority
      * @param callable The Task to be performed
