@@ -1,3 +1,4 @@
+import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.FutureTask;
 
@@ -44,15 +45,28 @@ public class Task<T> extends FutureTask<T> implements Callable<T>, Comparable<Ta
         this.callable = callable;
     }
 
-    public int hashCode() {
-        return type.getPriorityValue() * callable.hashCode();
+//    public int hashCode() {
+//        return type.getPriorityValue() * callable.hashCode();
+//    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Task<?> task = (Task<?>) o;
+        return type == task.type && Objects.equals(callable, task.callable);
     }
 
-    public boolean equals(Task<T> other) {
-        if (compareTo(other) == 0)
-            return true;
-        return false;
+    @Override
+    public int hashCode() {
+        return Objects.hash(type, callable);
     }
+
+//    public boolean equals(Task<T> other) {
+//        if (compareTo(other) == 0)
+//            return true;
+//        return false;
+//    }
 
     /**
      * This method is used to execute the task

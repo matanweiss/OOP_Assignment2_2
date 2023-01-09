@@ -1,3 +1,4 @@
+import java.util.Arrays;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.PriorityBlockingQueue;
@@ -121,8 +122,17 @@ public class CustomExecutor extends ThreadPoolExecutor {
         return counts;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CustomExecutor that = (CustomExecutor) o;
+        return Arrays.equals(counts, that.counts);
+    }
+
+    @Override
     public int hashCode() {
-        return counts.hashCode() * getQueue().hashCode();
+        return Arrays.hashCode(counts);
     }
 
     /**
@@ -137,6 +147,5 @@ public class CustomExecutor extends ThreadPoolExecutor {
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
-
     }
 }
