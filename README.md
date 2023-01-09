@@ -14,3 +14,6 @@ Unknown Task - the minimum priority
 The CustomExecutor class is a custom thread pool class that defines a method for submitting a generic task to a priority queue, and a method for submitting a generic task created by a 
 Callable and a Type, passed as arguments.  
 To execute the Tasks by their type, we used PriorityBlockingQueue to keep the Tasks ordered by priority.  
+The CustomExecutor also has a method to get the maximum priority task that currently in the queue.  
+To do so, CustomExecutor holds a counter for each priority that represent the number of currently waiting Tasks.  
+Each time a Task is being sent, the counter for the priority is incremented, and each time a Task is being executed, it means the Task has left the queue so the counter for that priority is being decremented.
