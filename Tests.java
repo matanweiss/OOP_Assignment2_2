@@ -48,6 +48,10 @@ public class Tests {
         logger.info(() -> String.valueOf("Total Price = " + totalPrice));
         logger.info(() -> "Current maximum priority = " +
                 customExecutor.getCurrentMax());
-        // customExecutor.gracefullyTerminate();
+        try {
+            customExecutor.gracefullyTerminate();
+        } catch (InterruptedException e) {
+            logger.error(() -> e.getMessage());
+        }
     }
 }

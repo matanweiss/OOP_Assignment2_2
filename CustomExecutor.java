@@ -74,8 +74,12 @@ public class CustomExecutor extends ThreadPoolExecutor {
         return counts.hashCode() * getQueue().hashCode();
     }
 
+    public boolean gracefullyTerminate()
+            throws InterruptedException {
+        return super.awaitTermination(3, TimeUnit.SECONDS);
+    }
+
     public static void main(String[] args) {
-        // Comparator c1 = (Task<T> task1, Task<T> task2) -> task1.compareTo(task2);
         Callable<Integer> callable1 = (() -> 1 * 9);
         Task<Integer> task1 = Task.createTask(callable1, TaskType.OTHER);
         Task<Integer> task2 = Task.createTask(callable1, TaskType.IO);
