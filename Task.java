@@ -1,7 +1,8 @@
 import java.util.HashMap;
 import java.util.concurrent.Callable;
+import java.util.concurrent.FutureTask;
 
-public class Task<T> implements Callable<T>, Comparable<Task<T>> {
+public class Task<T> extends FutureTask<T> implements Callable<T>, Comparable<Task<T>> {
 
     private TaskType type;
     private Callable<T> callable;
@@ -18,6 +19,7 @@ public class Task<T> implements Callable<T>, Comparable<Task<T>> {
     }
 
     private Task(TaskType type, Callable<T> callable) {
+        super(callable);
         this.type = type;
         this.callable = callable;
         this.isWaiting = false;
@@ -83,7 +85,7 @@ public class Task<T> implements Callable<T>, Comparable<Task<T>> {
 
     @Override
     public int compareTo(Task<T> o) {
-        int difference = o.type.getPriorityValue() - type.getPriorityValue();
+        int difference = o.type.getPriorityValue() - this.type.getPriorityValue();
         return Integer.signum(difference);
     }
 }
