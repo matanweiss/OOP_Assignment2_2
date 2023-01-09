@@ -1,4 +1,3 @@
-import java.util.HashMap;
 import java.util.concurrent.Callable;
 import java.util.concurrent.FutureTask;
 
@@ -6,13 +5,6 @@ public class Task<T> extends FutureTask<T> implements Callable<T>, Comparable<Ta
 
     private TaskType type;
     private Callable<T> callable;
-    private boolean isWaiting;
-    public static HashMap<Integer, Integer> counts = new HashMap<Integer, Integer>();
-    static {
-        counts.put(1, 0);
-        counts.put(2, 0);
-        counts.put(3, 0);
-    }
 
     private Task(Callable<T> callable) {
         this(TaskType.IO, callable);
@@ -22,7 +14,6 @@ public class Task<T> extends FutureTask<T> implements Callable<T>, Comparable<Ta
         super(callable);
         this.type = type;
         this.callable = callable;
-        this.isWaiting = false;
     }
 
     public TaskType getType() {
@@ -30,12 +21,6 @@ public class Task<T> extends FutureTask<T> implements Callable<T>, Comparable<Ta
     }
 
     public void setType(TaskType type) {
-        if (isWaiting) {
-            int oldPriority = this.type.getPriorityValue();
-            int newPriority = type.getPriorityValue();
-            counts.put(oldPriority, counts.get(oldPriority) - 1);
-            counts.put(newPriority, counts.get(newPriority) + 1);
-        }
         this.type = type;
     }
 
@@ -45,14 +30,6 @@ public class Task<T> extends FutureTask<T> implements Callable<T>, Comparable<Ta
 
     public void setCallable(Callable<T> callable) {
         this.callable = callable;
-    }
-
-    public boolean getIsWaiting() {
-        return isWaiting;
-    }
-
-    public void setIsWaiting(boolean b) {
-        isWaiting = b;
     }
 
     public int hashCode() {
@@ -67,9 +44,6 @@ public class Task<T> extends FutureTask<T> implements Callable<T>, Comparable<Ta
 
     @Override
     public T call() throws Exception {
-        isWaiting = false;
-        int priority = type.getPriorityValue();
-        counts.put(priority, counts.get(priority) - 1);
         return callable.call();
     }
 
