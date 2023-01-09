@@ -1,6 +1,8 @@
 import org.junit.jupiter.api.Test;
 import org.junit.platform.commons.logging.Logger;
 import org.junit.platform.commons.logging.LoggerFactory;
+
+import java.util.Arrays;
 import java.util.concurrent.*;
 
 public class Tests {
@@ -36,6 +38,8 @@ public class Tests {
             return 1000 * Math.pow(1.02, 5);
         }, TaskType.COMPUTATIONAL);
         var reverseTask = customExecutor.submit(callable2, TaskType.IO);
+        customExecutor.submit(callable2, TaskType.IO);
+        logger.info(() -> "Current maximum priority = " +customExecutor.getCurrentMax());
         final Double totalPrice;
         final String reversed;
         try {
@@ -44,14 +48,10 @@ public class Tests {
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
         }
+
         logger.info(() -> "Reversed String = " + reversed);
         logger.info(() -> String.valueOf("Total Price = " + totalPrice));
-        logger.info(() -> "Current maximum priority = " +
-                customExecutor.getCurrentMax());
-        try {
-            customExecutor.gracefullyTerminate();
-        } catch (InterruptedException e) {
-            logger.error(() -> e.getMessage());
-        }
+        logger.info(() -> "Current maximum priority = " + customExecutor.getCurrentMax());
+        customExecutor.gracefullyTerminate();
     }
 }

@@ -1,4 +1,4 @@
-import java.util.HashMap;
+import java.util.Arrays;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.PriorityBlockingQueue;
@@ -9,20 +9,21 @@ import java.util.concurrent.TimeUnit;
 public class CustomExecutor extends ThreadPoolExecutor {
 
     private static int numOfCores = Runtime.getRuntime().availableProcessors();
-    private HashMap<Integer, Integer> counts;
+    private int[] counts = {0, 0, 0};
 
     public CustomExecutor() {
         super(numOfCores / 2, numOfCores - 1, 300, TimeUnit.MILLISECONDS,
                 new PriorityBlockingQueue<>());
-        counts = new HashMap<Integer, Integer>();
-        counts.put(1, 0);
-        counts.put(2, 0);
-        counts.put(3, 0);
     }
 
     public <T> Future<T> submit(Task<T> task) {
-        int priority = task.getType().getPriorityValue();
-        counts.put(priority, counts.get(priority) + 1);
+        int priority = 0;
+        String s = task.getType().toString();
+        if (s == "Computationl Task") priority = 1;
+        if (s == "IO-Bound Task") priority = 2;
+        if (s == "Unknown Task") priority = 3;
+        if (1 <= priority && priority <= 3)
+            counts[priority - 1]++;
         if (task == null || task.getCallable() == null)
             throw new NullPointerException();
         RunnableFuture<T> ftask = newTaskFor(task);
@@ -53,20 +54,21 @@ public class CustomExecutor extends ThreadPoolExecutor {
     @Override
     protected void beforeExecute(Thread t, Runnable r) {
         int priority = getCurrentMax();
-        counts.put(priority, counts.get(priority) - 1);
+        if (1 <= priority && priority <= 3)
+            counts[priority - 1]--;
     }
 
     public int getCurrentMax() {
-        if (0 < counts.get(1))
+        if (0 < counts[0])
             return 1;
-        if (0 < counts.get(2))
+        if (0 < counts[1])
             return 2;
-        if (0 < counts.get(3))
+        if (0 < counts[2])
             return 3;
         return 0;
     }
 
-    public HashMap<Integer, Integer> getCounts() {
+    public int[] getCounts() {
         return counts;
     }
 
@@ -74,43 +76,90 @@ public class CustomExecutor extends ThreadPoolExecutor {
         return counts.hashCode() * getQueue().hashCode();
     }
 
-    public boolean gracefullyTerminate()
-            throws InterruptedException {
-        return super.awaitTermination(3, TimeUnit.SECONDS);
-    }
-
-    public static void main(String[] args) {
-        Callable<Integer> callable1 = (() -> 1 * 9);
-        Task<Integer> task1 = Task.createTask(callable1, TaskType.OTHER);
-        Task<Integer> task2 = Task.createTask(callable1, TaskType.IO);
-        Task<Integer> task3 = Task.createTask(callable1, TaskType.OTHER);
-        Task<Integer> task4 = Task.createTask(callable1, TaskType.OTHER);
-        Task<Integer> task5 = Task.createTask(callable1, TaskType.OTHER);
-        Task<Integer> task6 = Task.createTask(callable1, TaskType.OTHER);
-        CustomExecutor c = new CustomExecutor();
-        Future<Integer> result1 = c.submit(task1);
-        Future<Integer> result2 = c.submit(task2);
-        Future<Integer> result3 = c.submit(task3);
-        Future<Integer> result4 = c.submit(task4);
-        Future<Integer> result5 = c.submit(task5);
-        Future<Integer> result6 = c.submit(task6);
-        System.out.println(c.getCurrentMax());
-        System.out.println(c.getCounts());
-        System.out.println(c.getCurrentMax());
-        int res = 0;
+    public void gracefullyTerminate() {
         try {
-            res = result1.get();
-            res = result2.get();
-            res = result3.get();
-            res = result4.get();
-            res = result5.get();
-            res = result6.get();
+            super.awaitTermination(3, TimeUnit.SECONDS);
+            super.shutdown();
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
-        System.out.println("result: " + res);
+
+    }
+
+    public static void main(String[] args) {
+        CustomExecutor c = new CustomExecutor();
+        Callable<String> callable1 = (() -> {
+            Thread.sleep(1000);
+            return "OTHER";
+        });
+        Callable<String> callable2 = (() -> {
+            Thread.sleep(1000);
+            return "COMPUTATIONAL";
+        });
+        Task<String> task1 = Task.createTask(callable1, TaskType.OTHER);
+        Task<String> task2 = Task.createTask(callable1, TaskType.OTHER);
+        Task<String> task3 = Task.createTask(callable1, TaskType.OTHER);
+        Task<String> task4 = Task.createTask(callable1, TaskType.OTHER);
+        Task<String> task5 = Task.createTask(callable1, TaskType.OTHER);
+        Task<String> task6 = Task.createTask(callable1, TaskType.OTHER);
+        Task<String> task7 = Task.createTask(callable1, TaskType.COMPUTATIONAL);
+        Task<String> task8 = Task.createTask(callable1, TaskType.COMPUTATIONAL);
+        Task<String> task9 = Task.createTask(callable1, TaskType.COMPUTATIONAL);
+        Task<String> task10 = Task.createTask(callable1, TaskType.COMPUTATIONAL);
+        Task<String> task11 = Task.createTask(callable1, TaskType.COMPUTATIONAL);
+        task2.getType().setPriority(2);
+        System.out.println(task1.getType().getPriorityValue());
+        System.out.println(task2.getType().getPriorityValue());
+        Future<String> result1 = c.submit(task1);
+        Future<String> result2 = c.submit(task2);
+        Future<String> result3 = c.submit(task3);
+        Future<String> result4 = c.submit(task4);
+        Future<String> result5 = c.submit(task5);
+        Future<String> result6 = c.submit(task6);
+        Future<String> result7 = c.submit(task7);
+        Future<String> result8 = c.submit(task8);
+        Future<String> result9 = c.submit(task9);
+        Future<String> result10 = c.submit(task10);
+        Future<String> result11 = c.submit(task11);
         System.out.println(c.getCurrentMax());
-        c.shutdown();
-        System.out.println(c.getCounts());
+        System.out.println(Arrays.toString(c.getCounts()));
+        try {
+            Thread.sleep(500);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        System.out.println(c.getCurrentMax());
+        System.out.println(Arrays.toString(c.getCounts()));
+        try {
+            Thread.sleep(500);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        System.out.println(c.getCurrentMax());
+        System.out.println(Arrays.toString(c.getCounts()));
+        try {
+            Thread.sleep(500);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        System.out.println(c.getCurrentMax());
+        System.out.println(Arrays.toString(c.getCounts()));
+//        System.out.println(Arrays.toString(c.getCounts()));
+//        System.out.println(c.getCurrentMax());
+        int res = 0;
+        try {
+            System.out.println(result1.get());
+            System.out.println(result2.get());
+            System.out.println(result3.get());
+            System.out.println(result4.get());
+            System.out.println(result5.get());
+            System.out.println(result6.get());
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+//        System.out.println("result: " + res);
+//        System.out.println(c.getCurrentMax());
+        c.gracefullyTerminate();
+        System.out.println(Arrays.toString(c.getCounts()));
     }
 }

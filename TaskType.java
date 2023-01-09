@@ -47,4 +47,14 @@ public enum TaskType {
             return false;
         return true;
     }
+
+    public static void main(String[] args) {
+
+        TaskType t1 = TaskType.COMPUTATIONAL;
+        TaskType t2 = TaskType.IO;
+        TaskType t3 = TaskType.OTHER;
+        System.out.println(t1.getPriorityValue());
+        System.out.println(t2.getPriorityValue());
+        System.out.println(t3.getPriorityValue());
+    }
 }
