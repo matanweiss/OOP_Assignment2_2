@@ -2,7 +2,6 @@ import java.util.Arrays;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.PriorityBlockingQueue;
-import java.util.concurrent.RunnableFuture;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -40,24 +39,8 @@ public class CustomExecutor extends ThreadPoolExecutor {
             counts[priority - 1]++;
         if (task == null || task.getCallable() == null)
             throw new NullPointerException();
-        RunnableFuture<T> ftask = newTaskFor(task);
-        execute(ftask);
-        return ftask;
-    }
-
-    /**
-     * Creating a Task from a Callable
-     * checking it's priority by getCurrentMax()
-     * 
-     * @return the Task that the method created
-     */
-    @Override
-    protected <T> RunnableFuture<T> newTaskFor(final Callable<T> callable) {
-        int priority = getCurrentMax();
-        TaskType type = TaskType.IO;
-        if (1 <= priority && priority <= 3)
-            type.setPriority(priority);
-        return Task.createTask(callable, type);
+        execute(task);
+        return task;
     }
 
     /**
@@ -124,8 +107,10 @@ public class CustomExecutor extends ThreadPoolExecutor {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         CustomExecutor that = (CustomExecutor) o;
         return Arrays.equals(counts, that.counts);
     }
